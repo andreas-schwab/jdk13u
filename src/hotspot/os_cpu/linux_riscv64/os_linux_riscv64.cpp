@@ -457,12 +457,8 @@ JVM_handle_linux_signal(int sig,
         // Do not crash the VM in such a case.
         CodeBlob* cb = CodeCache::find_blob_unsafe(pc);
         CompiledMethod* nm = (cb != NULL) ? cb->as_compiled_method_or_null() : NULL;
-        bool is_unsafe_arraycopy = (thread->doing_unsafe_access() && UnsafeCopyMemory::contains_pc(pc));
-        if ((nm != NULL && nm->has_unsafe_access()) || is_unsafe_arraycopy) {
+        if (nm != NULL && nm->has_unsafe_access()) {
           address next_pc = pc + NativeCall::instruction_size;
-          if (is_unsafe_arraycopy) {
-            next_pc = UnsafeCopyMemory::page_error_continue_pc(pc);
-          }
           stub = SharedRuntime::handle_unsafe_access(thread, next_pc);
         }
       } else if (sig == SIGILL && nativeInstruction_at(pc)->is_stop()) {
@@ -493,14 +489,10 @@ JVM_handle_linux_signal(int sig,
           // Determination of interpreter/vtable stub/compiled code null exception
           stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_NULL);
       }
-    } else if ((thread->thread_state() == _thread_in_vm ||
-                thread->thread_state() == _thread_in_native) &&
-                sig == SIGBUS && /* info->si_code == BUS_OBJERR && */
-                thread->doing_unsafe_access()) {
+    } else if (thread->thread_state() == _thread_in_native &&
+               sig == SIGBUS && /* info->si_code == BUS_OBJERR && */
+               thread->doing_unsafe_access()) {
       address next_pc = pc + NativeCall::instruction_size;
-      if (UnsafeCopyMemory::contains_pc(pc)) {
-        next_pc = UnsafeCopyMemory::page_error_continue_pc(pc);
-      }
       stub = SharedRuntime::handle_unsafe_access(thread, next_pc);
     }
 
