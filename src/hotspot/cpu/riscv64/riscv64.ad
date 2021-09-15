@@ -2135,8 +2135,7 @@ encode %{
 
     // Handle existing monitor.
     __ bind(object_has_monitor);
-    STATIC_ASSERT(markWord::monitor_value <= INT_MAX);
-    __ add(tmp, tmp, -(int)markWord::monitor_value); // monitor
+    __ add(tmp, tmp, -markWord::monitor_value); // monitor
     __ ld(flag, Address(tmp, ObjectMonitor::owner_offset_in_bytes()));
     __ ld(disp_hdr, Address(tmp, ObjectMonitor::recursions_offset_in_bytes()));
     __ xorr(flag, flag, xthread); // Will be 0 if we are the owner.
