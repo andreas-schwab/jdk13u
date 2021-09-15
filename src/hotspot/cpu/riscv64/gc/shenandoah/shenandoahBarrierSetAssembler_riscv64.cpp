@@ -635,7 +635,7 @@ address ShenandoahBarrierSetAssembler::generate_shenandoah_lrb(StubCodeGenerator
 
   __ push_call_clobbered_registers();
 
-  __ li(lr, (int64_t)(intptr_t)ShenandoahRuntime::load_reference_barrier);
+  __ li(lr, (int64_t)(intptr_t)ShenandoahRuntime::load_reference_barrier_JRT);
   __ jalr(lr);
   __ mv(t0, x10);
   __ pop_call_clobbered_registers();
