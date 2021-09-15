@@ -50,7 +50,7 @@ void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, Dec
                                                        Register src, Register dst, Register count, RegSet saved_regs) {
   if (is_oop) {
     bool dest_uninitialized = (decorators & IS_DEST_UNINITIALIZED) != 0;
-    if ((ShenandoahSATBBarrier && !dest_uninitialized) || ShenandoahStoreValEnqueueBarrier || ShenandoahLoadRefBarrier) {
+    if ((ShenandoahSATBBarrier && !dest_uninitialized) || ShenandoahLoadRefBarrier) {
 
       Label done;
 
@@ -62,7 +62,7 @@ void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, Dec
       assert_different_registers(src, dst, count, t0);
 
       __ lbu(t0, gc_state);
-      if (ShenandoahSATBBarrier && dest_uninitialized) {
+      if (dest_uninitialized) {
         __ andi(t0, t0, ShenandoahHeap::HAS_FORWARDED);
         __ beqz(t0, done);
       } else {
