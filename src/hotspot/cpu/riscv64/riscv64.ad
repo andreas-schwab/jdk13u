@@ -1455,7 +1455,7 @@ const bool Matcher::match_rule_supported(int opcode) {
 
 // Identify extra cases that we might want to provide match rules for vector nodes and
 // other intrinsics guarded with vector length (vlen) and element type (bt).
-const bool Matcher::match_rule_supported_vector(int opcode, int vlen, BasicType bt) {
+const bool Matcher::match_rule_supported_vector(int opcode, int vlen) {
   return false;
 }
 
