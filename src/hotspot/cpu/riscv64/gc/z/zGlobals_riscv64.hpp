@@ -30,6 +30,7 @@ const size_t ZPlatformHeapViews               = 3;
 const size_t ZPlatformNMethodDisarmedOffset = 4;
 const size_t ZPlatformCacheLineSize          = 64;
 
+uintptr_t ZPlatformAddressBase();
 size_t ZPlatformAddressOffsetBits();
 size_t ZPlatformAddressMetadataShift();
 
