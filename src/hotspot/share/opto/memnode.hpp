@@ -864,8 +864,12 @@ class StorePConditionalNode : public LoadStoreConditionalNode {
 public:
   StorePConditionalNode( Node *c, Node *mem, Node *adr, Node *val, Node *ll ) : LoadStoreConditionalNode(c, mem, adr, val, ll) { }
   virtual int Opcode() const;
+#ifdef RISCV64
+  virtual uint ideal_reg() const { return Op_RegI; }
+#else
   // Produces flags
   virtual uint ideal_reg() const { return Op_RegFlags; }
+#endif
 };
 
 //------------------------------StoreIConditionalNode---------------------------
@@ -875,8 +879,12 @@ class StoreIConditionalNode : public LoadStoreConditionalNode {
 public:
   StoreIConditionalNode( Node *c, Node *mem, Node *adr, Node *val, Node *ii ) : LoadStoreConditionalNode(c, mem, adr, val, ii) { }
   virtual int Opcode() const;
+#ifdef RISCV64
+  virtual uint ideal_reg() const { return Op_RegI; }
+#else
   // Produces flags
   virtual uint ideal_reg() const { return Op_RegFlags; }
+#endif
 };
 
 //------------------------------StoreLConditionalNode---------------------------
@@ -886,8 +894,12 @@ class StoreLConditionalNode : public LoadStoreConditionalNode {
 public:
   StoreLConditionalNode( Node *c, Node *mem, Node *adr, Node *val, Node *ll ) : LoadStoreConditionalNode(c, mem, adr, val, ll) { }
   virtual int Opcode() const;
+#ifdef RISCV64
+  virtual uint ideal_reg() const { return Op_RegI; }
+#else
   // Produces flags
   virtual uint ideal_reg() const { return Op_RegFlags; }
+#endif
 };
 
 class CompareAndSwapNode : public LoadStoreConditionalNode {

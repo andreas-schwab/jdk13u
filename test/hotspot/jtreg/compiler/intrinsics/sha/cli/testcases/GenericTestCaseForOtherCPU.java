@@ -32,14 +32,15 @@ import jdk.test.lib.cli.predicate.OrPredicate;
 
 /**
  * Generic test case for SHA-related options targeted to any CPU except
- * AArch64, PPC, S390x, SPARC and X86.
+ * AArch64, Riscv64, PPC, S390x, SPARC and X86.
  */
 public class GenericTestCaseForOtherCPU extends
         SHAOptionsBase.TestCase {
     public GenericTestCaseForOtherCPU(String optionName) {
-        // Execute the test case on any CPU except AArch64, PPC, S390x, SPARC and X86.
+        // Execute the test case on any CPU except AArch64, Riscv64, PPC, S390x, SPARC and X86.
         super(optionName, new NotPredicate(
                               new OrPredicate(Platform::isAArch64,
+                              new OrPredicate(Platform::isRiscv64,
                               new OrPredicate(Platform::isS390x,
                               new OrPredicate(Platform::isSparc,
                               new OrPredicate(Platform::isPPC,
@@ -51,7 +52,7 @@ public class GenericTestCaseForOtherCPU extends
     protected void verifyWarnings() throws Throwable {
         String shouldPassMessage = String.format("JVM should start with "
                 + "option '%s' without any warnings", optionName);
-        // Verify that on non-x86, non-SPARC and non-AArch64 CPU usage of
+        // Verify that on non-x86, non-SPARC, non-Riscv64 and non-AArch64 CPU usage of
         //  SHA-related options will not cause any warnings.
         CommandLineOptionTest.verifySameJVMStartup(null,
                 new String[] { ".*" + optionName + ".*" }, shouldPassMessage,
