@@ -680,7 +680,7 @@ void ShenandoahBarrierSetAssembler::generate_c1_pre_barrier_runtime_stub(StubAss
   // Is marking still active?
   Address gc_state(thread, in_bytes(ShenandoahThreadLocalData::gc_state_offset()));
   __ lb(tmp, gc_state);
-  __ andi(tmp, tmp, ShenandoahHeap::MARKING);
+  __ andi(tmp, tmp, ShenandoahHeap::MARKING | ShenandoahHeap::TRAVERSAL);
   __ beqz(tmp, done);
 
   // Can we store original value in the thread's buffer?
