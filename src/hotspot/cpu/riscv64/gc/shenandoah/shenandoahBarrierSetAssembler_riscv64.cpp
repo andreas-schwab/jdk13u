@@ -392,7 +392,6 @@ void ShenandoahBarrierSetAssembler::load_at(MacroAssembler* masm,
   // 3: apply keep-alive barrier if needed
   if (ShenandoahBarrierSet::need_keep_alive_barrier(decorators, type)) {
     __ enter();
-    __ push_call_clobbered_registers();
     satb_write_barrier_pre(masm /* masm */,
                            noreg /* obj */,
                            dst /* pre_val */,
@@ -400,7 +399,6 @@ void ShenandoahBarrierSetAssembler::load_at(MacroAssembler* masm,
                            tmp1 /* tmp */,
                            true /* tosca_live */,
                            true /* expand_call */);
-    __ pop_call_clobbered_registers();
     __ leave();
   }
 }
