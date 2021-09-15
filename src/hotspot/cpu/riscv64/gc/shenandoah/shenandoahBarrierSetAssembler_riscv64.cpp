@@ -233,10 +233,9 @@ void ShenandoahBarrierSetAssembler::resolve_forward_pointer_not_null(MacroAssemb
   __ pop_reg(saved_regs, sp);
 }
 
-void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembler* masm, Register dst, Address load_addr) {
+void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembler* masm, Register dst, Register tmp) {
   assert(ShenandoahLoadRefBarrier, "Should be enabled");
   assert(dst != t1 && load_addr.base() != t1, "need t1");
-  assert_different_registers(load_addr.base(), t0, t1);
 
   Label done;
   __ enter();
@@ -247,23 +246,18 @@ void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembl
   __ andi(t0, t1, ShenandoahHeap::HAS_FORWARDED);
   __ beqz(t0, done);
 
-  // use x11 for load address
-  Register result_dst = dst;
-  if (dst == x11) {
-    __ mv(t1, dst);
-    dst = t1;
+  RegSet saved_regs = RegSet::of(x10);
+  if (dst != x10) {
+    __ push_reg(saved_regs, sp);
+    __ mv(x10, dst);
   }
-
-  // Save x10 and x11, unless it is an output register
-  RegSet saved_regs = RegSet::of(x10, x11) - result_dst;
-  __ push_reg(saved_regs, sp);
-  __ la(x11, load_addr);
-  __ mv(x10, dst);
 
   __ far_call(RuntimeAddress(CAST_FROM_FN_PTR(address, ShenandoahBarrierSetAssembler::shenandoah_lrb())));
 
-  __ mv(result_dst, x10);
-  __ pop_reg(saved_regs, sp);
+  if (dst != x10) {
+    __ mv(dst, x10);
+    __ pop_reg(saved_regs, sp);
+  }
 
   __ bind(done);
   __ leave();
@@ -318,11 +312,11 @@ void ShenandoahBarrierSetAssembler::storeval_barrier(MacroAssembler* masm, Regis
   }
 }
 
-void ShenandoahBarrierSetAssembler::load_reference_barrier(MacroAssembler* masm, Register dst, Address load_addr) {
+void ShenandoahBarrierSetAssembler::load_reference_barrier(MacroAssembler* masm, Register dst, Register tmp) {
   if (ShenandoahLoadRefBarrier) {
     Label is_null;
     __ beqz(dst, is_null);
-    load_reference_barrier_not_null(masm, dst, load_addr);
+    load_reference_barrier_not_null(masm, dst, tmp);
     __ bind(is_null);
   }
 }
@@ -361,7 +355,7 @@ void ShenandoahBarrierSetAssembler::load_at(MacroAssembler* masm,
     if (not_in_heap && !is_traversal_mode) {
       load_reference_barrier_native(masm, dst, src);
     } else {
-      load_reference_barrier(masm, dst, src);
+      load_reference_barrier(masm, dst, tmp1);
     }
 
     if (dst != result_dst) {
@@ -690,9 +684,9 @@ void ShenandoahBarrierSetAssembler::generate_c1_load_reference_barrier_runtime_s
   __ load_parameter(0, x10);
   __ load_parameter(1, x11);
   if (UseCompressedOops) {
-    __ li(lr, (int64_t)(uintptr_t)ShenandoahRuntime::load_reference_barrier_narrow);
+    __ li(lr, (int64_t)(uintptr_t)ShenandoahRuntime::load_reference_barrier_fixup_narrow);
   } else {
-    __ li(lr, (int64_t)(uintptr_t)ShenandoahRuntime::load_reference_barrier);
+    __ li(lr, (int64_t)(uintptr_t)ShenandoahRuntime::load_reference_barrier_fixup);
   }
   __ jalr(lr);
   __ mv(t0, x10);
@@ -717,7 +711,6 @@ address ShenandoahBarrierSetAssembler::shenandoah_lrb() {
 //
 // Input:
 //   x10: OOP to evacuate.  Not null.
-//   x11: load address
 //
 // Output:
 //   x10: Pointer to evacuated OOP.
@@ -755,11 +748,7 @@ address ShenandoahBarrierSetAssembler::generate_shenandoah_lrb(StubCodeGenerator
 
   __ push_call_clobbered_registers();
 
-  if (UseCompressedOops) {
-    __ li(lr, (int64_t)(intptr_t)ShenandoahRuntime::load_reference_barrier_narrow);
-  } else {
-    __ li(lr, (int64_t)(intptr_t)ShenandoahRuntime::load_reference_barrier);
-  }
+  __ li(lr, (int64_t)(intptr_t)ShenandoahRuntime::load_reference_barrier);
   __ jalr(lr);
   __ mv(t0, x10);
   __ pop_call_clobbered_registers();
