@@ -33,6 +33,10 @@
 // Note that memory_order_conservative requires a full barrier after atomic stores.
 // See https://patchwork.kernel.org/patch/3575821/
 
+#define FULL_MEM_BARRIER  __sync_synchronize()
+#define READ_MEM_BARRIER  __atomic_thread_fence(__ATOMIC_ACQUIRE);
+#define WRITE_MEM_BARRIER __atomic_thread_fence(__ATOMIC_RELEASE);
+
 template<size_t byte_size>
 struct Atomic::PlatformAdd
   : Atomic::AddAndFetch<Atomic::PlatformAdd<byte_size> >
@@ -106,26 +110,5 @@ inline T Atomic::PlatformCmpxchg<4>::operator()(T exchange_value,
   }
   return rv;
 }
-
-template<size_t byte_size>
-struct Atomic::PlatformOrderedLoad<byte_size, X_ACQUIRE>
-{
-  template <typename T>
-  T operator()(const volatile T* p) const { T data; __atomic_load(const_cast<T*>(p), &data, __ATOMIC_ACQUIRE); return data; }
-};
-
-template<size_t byte_size>
-struct Atomic::PlatformOrderedStore<byte_size, RELEASE_X>
-{
-  template <typename T>
-  void operator()(T v, volatile T* p) const { __atomic_store(const_cast<T*>(p), &v, __ATOMIC_RELEASE); }
-};
-
-template<size_t byte_size>
-struct Atomic::PlatformOrderedStore<byte_size, RELEASE_X_FENCE>
-{
-  template <typename T>
-  void operator()(T v, volatile T* p) const { release_store(p, v); OrderAccess::fence(); }
-};
 
 #endif // OS_CPU_LINUX_RISCV64_ATOMIC_LINUX_RISCV64_HPP
