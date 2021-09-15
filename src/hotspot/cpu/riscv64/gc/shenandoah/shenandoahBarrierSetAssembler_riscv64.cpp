@@ -564,7 +564,6 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 
   Register obj = stub->obj()->as_register();
   Register res = stub->result()->as_register();
-  Register addr = stub->addr()->as_pointer_register();
   Register tmp1 = stub->tmp1()->as_register();
   Register tmp2 = stub->tmp2()->as_register();
 
@@ -599,7 +598,6 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 
   __ bind(slow_path);
   ce->store_parameter(res, 0);
-  ce->store_parameter(addr, 1);
   __ far_call(RuntimeAddress(bs->load_reference_barrier_rt_code_blob()->code_begin()));
 
   __ j(*stub->continuation());
@@ -660,12 +658,7 @@ void ShenandoahBarrierSetAssembler::generate_c1_load_reference_barrier_runtime_s
 
   __ push_call_clobbered_registers();
   __ load_parameter(0, x10);
-  __ load_parameter(1, x11);
-  if (UseCompressedOops) {
-    __ li(lr, (int64_t)(uintptr_t)ShenandoahRuntime::load_reference_barrier_fixup_narrow);
-  } else {
-    __ li(lr, (int64_t)(uintptr_t)ShenandoahRuntime::load_reference_barrier_fixup);
-  }
+  __ li(lr, (int64_t)(uintptr_t)ShenandoahRuntime::load_reference_barrier);
   __ jalr(lr);
   __ mv(t0, x10);
   __ pop_call_clobbered_registers();
