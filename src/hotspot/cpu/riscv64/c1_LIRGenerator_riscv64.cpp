@@ -596,7 +596,7 @@ LIR_Opr LIRGenerator::atomic_cmpxchg(BasicType type, LIR_Opr addr, LIRItem& cmp_
   new_value.load_item();
   cmp_value.load_item();
   LIR_Opr result = new_register(T_INT);
-  if (is_reference_type(type)) {
+  if (type == T_OBJECT || type == T_ARRAY) {
     __ cas_obj(addr, cmp_value.result(), new_value.result(), new_register(T_INT), new_register(T_INT), result);
   } else if (type == T_INT) {
     __ cas_int(addr->as_address_ptr()->base(), cmp_value.result(), new_value.result(), ill, ill);
@@ -610,7 +610,7 @@ LIR_Opr LIRGenerator::atomic_cmpxchg(BasicType type, LIR_Opr addr, LIRItem& cmp_
 }
 
 LIR_Opr LIRGenerator::atomic_xchg(BasicType type, LIR_Opr addr, LIRItem& value) {
-  bool is_oop = is_reference_type(type);
+  bool is_oop = type == T_OBJECT || type == T_ARRAY;
   LIR_Opr result = new_register(type);
   value.load_item();
   assert(type == T_INT || is_oop LP64_ONLY( || type == T_LONG ), "unexpected type");

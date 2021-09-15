@@ -97,7 +97,7 @@ LIR_Opr ShenandoahBarrierSetC1::atomic_xchg_at_resolved(LIRAccess& access, LIRIt
     value_opr = storeval_barrier(access.gen(), value_opr, access.access_emit_info(), access.decorators());
   }
 
-  assert(type == T_INT || is_reference_type(type) LP64_ONLY( || type == T_LONG ), "unexpected type");
+  assert(type == T_INT || type == T_OBJECT || type == T_ARRAY LP64_ONLY( || type == T_LONG ), "unexpected type");
   LIR_Opr tmp = gen->new_register(T_INT);
   __ xchg(access.resolved_addr(), value_opr, result, tmp);
 

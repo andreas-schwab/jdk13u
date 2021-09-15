@@ -302,7 +302,7 @@ void LIR_Assembler::emit_arraycopy(LIR_OpArrayCopy* op) {
   CodeStub* stub = op->stub();
   int flags = op->flags();
   BasicType basic_type = default_type != NULL ? default_type->element_type()->basic_type() : T_ILLEGAL;
-  if (is_reference_type(basic_type)) { basic_type = T_OBJECT; }
+  if (basic_type == T_ARRAY) { basic_type = T_OBJECT; }
 
   // if we don't know anything, just go through the generic arraycopy
   if (default_type == NULL) {

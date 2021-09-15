@@ -245,7 +245,7 @@ void G1BarrierSetAssembler::g1_write_barrier_post(MacroAssembler* masm,
 void G1BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators, BasicType type,
                                     Register dst, Address src, Register tmp1, Register tmp_thread) {
   assert_cond(masm != NULL);
-  bool on_oop = is_reference_type(type);
+  bool on_oop = type == T_OBJECT || type == T_ARRAY;
   bool on_weak = (decorators & ON_WEAK_OOP_REF) != 0;
   bool on_phantom = (decorators & ON_PHANTOM_OOP_REF) != 0;
   bool on_reference = on_weak || on_phantom;
