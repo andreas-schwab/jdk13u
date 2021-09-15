@@ -756,9 +756,6 @@ class MacroAssembler: public Assembler {
 
   void cmpptr(Register src1, Address src2, Label& equal);
 
-  void clinit_barrier(Register klass, Register tmp, Label* L_fast_path = NULL, Label* L_slow_path = NULL);
-  void load_method_holder(Register holder, Register method);
-
   void oop_beq(Register obj1, Register obj2, Label& L_equal, bool is_far = false);
   void oop_bne(Register obj1, Register obj2, Label& L_nequal, bool is_far = false);
 
