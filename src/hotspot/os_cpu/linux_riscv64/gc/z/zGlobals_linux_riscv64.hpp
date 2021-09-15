@@ -22,8 +22,8 @@
  * questions.
  */
 
-#ifndef CPU_RISCV64_GC_Z_ZGLOBALS_RISCV64_HPP
-#define CPU_RISCV64_GC_Z_ZGLOBALS_RISCV64_HPP
+#ifndef OS_CPU_LINUX_RISCV64_GC_Z_ZGLOBALS_LINUX_RISCV64_HPP
+#define OS_CPU_LINUX_RISCV64_GC_Z_ZGLOBALS_LINUX_RISCV64_HPP
 
 //
 // Page Allocation Tiers
@@ -49,4 +49,4 @@ uintptr_t ZPlatformAddressBase();
 size_t ZPlatformAddressOffsetBits();
 size_t ZPlatformAddressMetadataShift();
 
-#endif // CPU_RISCV64_GC_Z_ZGLOBALS_RISCV64_HPP
+#endif // OS_CPU_LINUX_RISCV64_GC_Z_ZGLOBALS_LINUX_RISCV64_HPP
