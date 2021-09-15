@@ -49,7 +49,7 @@ void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, Dec
                                                        Register src, Register dst, Register count, RegSet saved_regs) {
   if (is_oop) {
     bool dest_uninitialized = (decorators & IS_DEST_UNINITIALIZED) != 0;
-    if ((ShenandoahSATBBarrier && !dest_uninitialized) || ShenandoahLoadRefBarrier) {
+    if (ShenandoahSATBBarrier && !dest_uninitialized) {
 
       Label done;
 
@@ -61,31 +61,58 @@ void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, Dec
       assert_different_registers(src, dst, count, t0);
 
       __ lbu(t0, gc_state);
-      if (dest_uninitialized) {
-        __ andi(t0, t0, ShenandoahHeap::HAS_FORWARDED);
-        __ beqz(t0, done);
-      } else {
-        __ andi(t0, t0, ShenandoahHeap::HAS_FORWARDED | ShenandoahHeap::MARKING);
-        __ beqz(t0, done);
-      }
+      __ andi(t0, t0, ShenandoahHeap::MARKING);
+      __ beqz(t0, done);
 
       __ push_reg(saved_regs, sp);
-      if (UseCompressedOops) {
-        if (dest_uninitialized) {
-          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_duinit_narrow_oop_entry), src, dst, count);
+      if (count == c_rarg0) {
+        if (dst == c_rarg1) {
+          // exactly backwards!!
+          __ mv(t0, c_rarg0);
+          __ mv(c_rarg0, c_rarg1);
+          __ mv(c_rarg1, t0);
         } else {
-          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_narrow_oop_entry), src, dst, count);
+          __ mv(c_rarg1, count);
+          __ mv(c_rarg0, dst);
         }
       } else {
-        if (dest_uninitialized) {
-          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_duinit_oop_entry), src, dst, count);
-        } else {
-          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_oop_entry), src, dst, count);
+        __ mv(c_rarg0, dst);
+        __ mv(c_rarg1, count);
         }
+      if (UseCompressedOops) {
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_narrow_oop_entry), 2);
+      } else {
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_oop_entry), 2);
       }
       __ pop_reg(saved_regs, sp);
       __ bind(done);
     }
+  }
+}
+
+void ShenandoahBarrierSetAssembler::arraycopy_epilogue(MacroAssembler* masm, DecoratorSet decorators, bool is_oop,
+                                                       Register start, Register count, Register scratch, RegSet saved_regs) {
+  if (is_oop) {
+      Label done;
+
+      // Avoid calling runtime if count == 0
+      __ beqz(count, done);
+
+      // Is updating references?
+      Address gc_state(xthread, in_bytes(ShenandoahThreadLocalData::gc_state_offset()));
+      __ lbu(t0, gc_state);
+      __ andi(t0, t0, ShenandoahHeap::UPDATEREFS);
+      __ beqz(t0, done);
+
+    __ push_reg(saved_regs, sp);
+    assert_different_registers(start, count, scratch);
+    assert_different_registers(c_rarg0, count);
+    __ mv(c_rarg0, start);
+    __ mv(c_rarg1, count);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_post_entry), 2);
+    __ pop_reg(saved_regs, sp);
+
+    __ bind(done);
   }
 }
 
