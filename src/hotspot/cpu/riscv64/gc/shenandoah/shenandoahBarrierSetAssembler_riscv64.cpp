@@ -57,7 +57,7 @@ void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, Dec
       // Avoid calling runtime if count == 0
       __ beqz(count, done);
 
-      // Is GC active?
+      // Is marking active?
       Address gc_state(xthread, in_bytes(ShenandoahThreadLocalData::gc_state_offset()));
       assert_different_registers(src, dst, count, t0);
 
@@ -72,9 +72,17 @@ void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, Dec
 
       __ push_reg(saved_regs, sp);
       if (UseCompressedOops) {
-        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::arraycopy_barrier_narrow_oop_entry), src, dst, count);
+        if (dest_uninitialized) {
+          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_duinit_narrow_oop_entry), src, dst, count);
+        } else {
+          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_narrow_oop_entry), src, dst, count);
+        }
       } else {
-        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::arraycopy_barrier_oop_entry), src, dst, count);
+        if (dest_uninitialized) {
+          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_duinit_oop_entry), src, dst, count);
+        } else {
+          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_oop_entry), src, dst, count);
+        }
       }
       __ pop_reg(saved_regs, sp);
       __ bind(done);
