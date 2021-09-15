@@ -578,7 +578,9 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
     __ mv(res, obj);
   }
   // Check for null.
-  __ beqz(res, done);
+  if (stub->needs_null_check()) {
+    __ beqz(res, done);
+  }
 
   load_reference_barrier_not_null(ce->masm(), res, t0);
 
