@@ -251,9 +251,9 @@ void ShenandoahBarrierSetAssembler::resolve_forward_pointer_not_null(MacroAssemb
   Label done;
   __ ld(tmp, Address(dst, oopDesc::mark_offset_in_bytes()));
   __ xori(tmp, tmp, -1); // eon with 0 is equivalent to XOR with -1
-  __ andi(t2, tmp, markWord::lock_mask_in_place);
+  __ andi(t2, tmp, markOopDesc::lock_mask_in_place);
   __ bnez(t2, done);
-  __ ori(tmp, tmp, markWord::marked_value);
+  __ ori(tmp, tmp, markOopDesc::marked_value);
   __ xori(dst, tmp, -1); // eon with 0 is equivalent to XOR with -1
   __ bind(done);
 
@@ -615,11 +615,11 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
   Label slow_path;
   __ ld(tmp1, Address(res, oopDesc::mark_offset_in_bytes()));
   __ xori(tmp1, tmp1, -1);
-  __ andi(tmp2, tmp1, markWord::lock_mask_in_place);
+  __ andi(tmp2, tmp1, markOopDesc::lock_mask_in_place);
   __ bnez(tmp2, slow_path);
 
   // Decode forwarded object.
-  __ ori(tmp1, tmp1, markWord::marked_value);
+  __ ori(tmp1, tmp1, markOopDesc::marked_value);
   __ xori(res, tmp1, -1);
   __ j(*stub->continuation());
 
@@ -733,11 +733,11 @@ address ShenandoahBarrierSetAssembler::generate_shenandoah_lrb(StubCodeGenerator
   Label slow_path;
   __ ld(t0, Address(x10, oopDesc::mark_offset_in_bytes()));
   __ xori(t0, t0, -1);
-  __ andi(t1, t0, markWord::lock_mask_in_place);
+  __ andi(t1, t0, markOopDesc::lock_mask_in_place);
   __ bnez(t1, slow_path);
 
   // Decode forwarded object.
-  __ ori(t0, t0, markWord::marked_value);
+  __ ori(t0, t0, markOopDesc::marked_value);
   __ xori(x10, t0, -1);
   __ ret();
 

@@ -2441,8 +2441,8 @@ void MacroAssembler::biased_locking_exit(Register obj_reg, Register temp_reg, La
   // lock, the object could not be rebiased toward another thread, so
   // the bias bit would be clear.
   ld(temp_reg, Address(obj_reg, oopDesc::mark_offset_in_bytes()));
-  andi(temp_reg, temp_reg, markWord::biased_lock_mask_in_place); // 1 << 3
-  sub(temp_reg, temp_reg, (u1)markWord::biased_lock_pattern);
+  andi(temp_reg, temp_reg, markOopDesc::biased_lock_mask_in_place); // 1 << 3
+  sub(temp_reg, temp_reg, (u1)markOopDesc::biased_lock_pattern);
   if (flag->is_valid()) { mv(flag, temp_reg); }
   beqz(temp_reg, done);
 }
@@ -2469,7 +2469,7 @@ int MacroAssembler::biased_locking_enter(Register lock_reg,
   }
 
   assert_different_registers(lock_reg, obj_reg, swap_reg, tmp_reg, t0, flag);
-  assert(markWord::age_shift == markWord::lock_bits + markWord::biased_lock_bits, "biased locking makes assumptions about bit layout");
+  assert(markOopDesc::age_shift == markOopDesc::lock_bits + markOopDesc::biased_lock_bits, "biased locking makes assumptions about bit layout");
   Address mark_addr      (obj_reg, oopDesc::mark_offset_in_bytes());
 
   // Biased locking
@@ -2484,15 +2484,15 @@ int MacroAssembler::biased_locking_enter(Register lock_reg,
     null_check_offset = offset();
     ld(swap_reg, mark_addr);
   }
-  andi(tmp_reg, swap_reg, markWord::biased_lock_mask_in_place);
-  xori(t0, tmp_reg, (u1)markWord::biased_lock_pattern);
+  andi(tmp_reg, swap_reg, markOopDesc::biased_lock_mask_in_place);
+  xori(t0, tmp_reg, (u1)markOopDesc::biased_lock_pattern);
   bnez(t0, cas_label); // don't care flag unless jumping to done
   // The bias pattern is present in the object's header. Need to check
   // whether the bias owner and the epoch are both still current.
   load_prototype_header(tmp_reg, obj_reg);
   orr(tmp_reg, tmp_reg, xthread);
   xorr(tmp_reg, swap_reg, tmp_reg);
-  andi(tmp_reg, tmp_reg, ~((int) markWord::age_mask_in_place));
+  andi(tmp_reg, tmp_reg, ~((int) markOopDesc::age_mask_in_place));
   if (flag->is_valid()) {
     mv(flag, tmp_reg);
   }
@@ -2519,7 +2519,7 @@ int MacroAssembler::biased_locking_enter(Register lock_reg,
   // If the low three bits in the xor result aren't clear, that means
   // the prototype header is no longer biased and we have to revoke
   // the bias on this object.
-  andi(t0, tmp_reg, markWord::biased_lock_mask_in_place);
+  andi(t0, tmp_reg, markOopDesc::biased_lock_mask_in_place);
   bnez(t0, try_revoke_bias);
 
   // Biasing is still enabled for this data type. See whether the
@@ -2531,7 +2531,7 @@ int MacroAssembler::biased_locking_enter(Register lock_reg,
   // that the current epoch is invalid in order to do this because
   // otherwise the manipulations it performs on the mark word are
   // illegal.
-  andi(t0, tmp_reg, markWord::epoch_mask_in_place);
+  andi(t0, tmp_reg, markOopDesc::epoch_mask_in_place);
   bnez(t0, try_rebias);
 
   // The epoch of the current bias is still valid but we know nothing
@@ -2543,7 +2543,7 @@ int MacroAssembler::biased_locking_enter(Register lock_reg,
   {
     Label cas_success;
     Label counter;
-    li(t0, (int64_t)(markWord::biased_lock_mask_in_place | markWord::age_mask_in_place | markWord::epoch_mask_in_place));
+    li(t0, (int64_t)(markOopDesc::biased_lock_mask_in_place | markOopDesc::age_mask_in_place | markOopDesc::epoch_mask_in_place));
     andr(swap_reg, swap_reg, t0);
     orr(tmp_reg, swap_reg, xthread);
     cmpxchg_obj_header(swap_reg, tmp_reg, obj_reg, t0, cas_success, slow_case);
