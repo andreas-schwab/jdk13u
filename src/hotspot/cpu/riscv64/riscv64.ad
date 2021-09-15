@@ -10019,7 +10019,9 @@ instruct ShouldNotReachHere() %{
   format %{ "#@ShouldNotReachHere" %}
 
   ins_encode %{
-    __ halt();
+    if (is_reachable()) {
+      __ halt();
+    }
   %}
 
   ins_pipe(pipe_class_default);
