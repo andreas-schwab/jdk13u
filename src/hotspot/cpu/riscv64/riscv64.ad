@@ -1462,18 +1462,14 @@ int HandlerImpl::emit_deopt_handler(CodeBuffer& cbuf)
 //=============================================================================
 
 const bool Matcher::match_rule_supported(int opcode) {
-  if (!has_match_rule(opcode)) {
-    return false;
-  }
 
   switch (opcode) {
-    case Op_CacheWB:           // fall through
-    case Op_CacheWBPreSync:    // fall through
-    case Op_CacheWBPostSync:
-      if (!VM_Version::supports_data_cache_line_flush()) {
-        return false;
-      }
-      break;
+  default:
+    break;
+  }
+
+  if (!has_match_rule(opcode)) {
+    return false;
   }
 
   return true; // Per default match rules are supported.
